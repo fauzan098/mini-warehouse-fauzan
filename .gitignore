@@ -1,0 +1,21 @@
+# Environment variables
+.env
+*.env
+
+# Keep example templates
+!.env.example
+
+# Go
+bin/
+*.exe
+*.test
+*.out
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# OS
+.DS_Store

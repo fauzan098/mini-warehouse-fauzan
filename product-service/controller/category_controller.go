@@ -15,7 +15,7 @@ import (
 
 type CategoryControllerInterface interface {
 	CreateCategory(ctx *fiber.Ctx) error
-	GetAllCategory(ctx *fiber.Ctx) error
+	GetAllCategories(ctx *fiber.Ctx) error
 	GetCategoryByID(ctx *fiber.Ctx) error
 	UpdateCategory(ctx *fiber.Ctx) error
 	DeleteCategory(ctx *fiber.Ctx) error
@@ -85,11 +85,11 @@ func (c *categoryController) DeleteCategory(ctx *fiber.Ctx) error {
 	})
 }
 
-// GetAllCategory implements [CategoryControllerInterface].
-func (c *categoryController) GetAllCategory(ctx *fiber.Ctx) error {
+// GetAllCategories implements [CategoryControllerInterface].
+func (c *categoryController) GetAllCategories(ctx *fiber.Ctx) error {
 	var req request.GetAllCategoryRequest
 	if err := ctx.QueryParser(&req); err != nil {
-		log.Errorf("[categoryController] GetAllCategory - 1: %v", err)
+		log.Errorf("[categoryController] GetAllCategories - 1: %v", err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "invalid request body",
 		})

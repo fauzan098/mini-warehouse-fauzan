@@ -15,7 +15,7 @@ import (
 
 type ProductControllerInterface interface {
 	CreateProduct(ctx *fiber.Ctx) error
-	GetAllProduct(ctx *fiber.Ctx) error
+	GetAllProducts(ctx *fiber.Ctx) error
 	GetProductByID(ctx *fiber.Ctx) error
 	GetProductByBarcode(ctx *fiber.Ctx) error
 	UpdateProduct(ctx *fiber.Ctx) error
@@ -81,7 +81,7 @@ func (p *productController) DeleteProduct(ctx *fiber.Ctx) error {
 }
 
 // GetAllProduct implements [ProductControllerInterface].
-func (p *productController) GetAllProduct(ctx *fiber.Ctx) error {
+func (p *productController) GetAllProducts(ctx *fiber.Ctx) error {
 	var req request.GetAllProductRequest
 	if err := ctx.QueryParser(&req); err != nil {
 		log.Errorf("[ProductController] GetAllProducts - 1: %v", err)

@@ -11,7 +11,7 @@ import (
 
 type ProductRepositoryInterface interface {
 	CreateProduct(ctx context.Context, product *model.Product) error
-	GetAllProduct(ctx context.Context, page, limit int, search, sortBy, sortOrder string) ([]model.Product, int64, error)
+	GetAllProducts(ctx context.Context, page, limit int, search, sortBy, sortOrder string) ([]model.Product, int64, error)
 	GetProductByID(ctx context.Context, id uint) (*model.Product, error)
 	GetProductByBarcode(ctx context.Context, barcode string) (*model.Product, error)
 	UpdateProduct(ctx context.Context, product *model.Product) error
@@ -51,10 +51,10 @@ func (p *productRepository) DeleteProduct(ctx context.Context, id uint) error {
 }
 
 // GetAllProduct implements [ProductRepositoryInterface].
-func (p *productRepository) GetAllProduct(ctx context.Context, page int, limit int, search string, sortBy string, sortOrder string) ([]model.Product, int64, error) {
+func (p *productRepository) GetAllProducts(ctx context.Context, page int, limit int, search string, sortBy string, sortOrder string) ([]model.Product, int64, error) {
 	select {
 	case <-ctx.Done():
-		log.Errorf("[productRepository] GetAllProduct - 1: %v", ctx.Err())
+		log.Errorf("[productRepository] GetAllProducts - 1: %v", ctx.Err())
 		return nil, 0, ctx.Err()
 	default:
 		if page <= 0 {
@@ -85,7 +85,7 @@ func (p *productRepository) GetAllProduct(ctx context.Context, page int, limit i
 		// Get total count
 		var totalRecords int64
 		if err := query.Count(&totalRecords).Error; err != nil {
-			log.Errorf("[productRepository] GetAllProduct - 2: %v", err)
+			log.Errorf("[productRepository] GetAllProducts - 2: %v", err)
 			return nil, 0, err
 		}
 
@@ -96,7 +96,7 @@ func (p *productRepository) GetAllProduct(ctx context.Context, page int, limit i
 			Offset(offset).
 			Limit(limit).
 			Find(&modelProducts).Error; err != nil {
-			log.Errorf("[productRepository] GetAllProduct - 3: %v", err)
+			log.Errorf("[productRepository] GetAllProducts - 3: %v", err)
 			return nil, 0, err
 		}
 

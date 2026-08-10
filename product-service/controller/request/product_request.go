@@ -7,13 +7,13 @@ type CreateProductRequest struct {
 	About      string `json:"about" validate:"required"`
 	CategoryID uint   `json:"category_id" validate:"required"`
 	Thumbnail  string `json:"thumbnail" validate:"required"`
-	IsPopular  string `json:"is_popular" validate:"required"`
+	IsPopular  bool `json:"is_popular" validate:"required"`
 }
 
 type GetAllProductRequest struct {
-	page      int `query:"page"`
+	Page      int `query:"page"`
 	Limit     int `query:"limit"`
-	Search    int `query:"search"`
-	SortBy    int `query:"sort_by"`
-	SortOrder int `query:"sort_order"`
+	Search    string `query:"search"`
+	SortBy    string `query:"sort_by"`
+	SortOrder string `query:"sort_order"`
 }

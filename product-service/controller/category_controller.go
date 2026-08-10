@@ -2,8 +2,10 @@ package controller
 
 import (
 	"micro-warehouse/product-service/controller/request"
+	"micro-warehouse/product-service/controller/response"
 	"micro-warehouse/product-service/model"
 	"micro-warehouse/product-service/pkg/conv"
+	"micro-warehouse/product-service/pkg/pagination"
 	"micro-warehouse/product-service/pkg/validator"
 	"micro-warehouse/product-service/usecase"
 
@@ -85,17 +87,116 @@ func (c *categoryController) DeleteCategory(ctx *fiber.Ctx) error {
 
 // GetAllCategory implements [CategoryControllerInterface].
 func (c *categoryController) GetAllCategory(ctx *fiber.Ctx) error {
-	panic("unimplemented")
+	var req request.GetAllCategoryRequest
+	if err := ctx.QueryParser(&req); err != nil {
+		log.Errorf("[categoryController] GetAllCategory - 1: %v", err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid request body",
+		})
+	}
+
+	if req.Page == 0 {
+		req.Page = 1
+	}
+
+	if req.Limit == 0 {
+		req.Limit = 10
+	}
+
+	categories, total, err := c.categoryUsecase.GetAllCategory(ctx.Context(), req.Page, req.Limit, req.Search, req.SortBy, req.SortOrder)
+	if err != nil {
+		log.Errorf("[categoryController] GetAllCategory - 2: %v", err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get all categories",
+		})
+	}
+
+	pagination := pagination.CalculatePagination(req.Page, req.Limit, int(total))
+	var categoriesResponse []response.CategoryResponse
+	for _, category := range categories {
+		categoriesResponse = append(categoriesResponse, response.CategoryResponse{
+			ID:      category.ID,
+			Name:    category.Name,
+			Tagline: category.Tagline,
+			Photo:   category.Photo,
+		})
+	}
+
+	response := response.GetAllCategoryResponse{
+		Categories: categoriesResponse,
+		Pagination: pagination,
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Category fetched successfully",
+		"data":    response,
+	})
 }
 
 // GetCategoryByID implements [CategoryControllerInterface].
 func (c *categoryController) GetCategoryByID(ctx *fiber.Ctx) error {
-	panic("unimplemented")
+	id := ctx.Params("id")
+	idToUint := conv.StringToUint(id)
+
+	category, err := c.categoryUsecase.GetCategoryByID(ctx.Context(), idToUint)
+	if err != nil {
+		log.Errorf("[categoryController] GetCategoryByID - 1: %v", err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get category by id",
+		})
+	}
+
+	response := response.CategoryResponse{
+		ID:           category.ID,
+		Name:         category.Name,
+		Tagline:      category.Tagline,
+		Photo:        category.Photo,
+		CountProduct: len(category.Products),
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Category fetched successfully",
+		"data":    response,
+	})
 }
 
 // UpdateCategory implements [CategoryControllerInterface].
 func (c *categoryController) UpdateCategory(ctx *fiber.Ctx) error {
-	panic("unimplemented")
+	id := ctx.Params("id")
+	idToUint := conv.StringToUint(id)
+
+	var req request.CreateCategoryRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		log.Errorf("[categoryController] UpdateCategory - 1: %v", err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid Request body",
+		})
+	}
+
+	if err := validator.Validate(req); err != nil {
+		log.Errorf("[categoryController] UpdateCategory - 2: %v", err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	reqModel := model.Category{
+		ID:      idToUint,
+		Name:    req.Name,
+		Tagline: req.Tagline,
+		Photo:   req.Photo,
+	}
+
+	if err := c.categoryUsecase.UpdateCategory(ctx.Context(), &reqModel); err != nil {
+		log.Errorf("[categoryController] UpdateCategory - 3: %v", err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to update category",
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Category update successfully",
+	})
 }
 
 func NewCategoryController(categoryUsecase usecase.CategoryUsecaseInterface) CategoryControllerInterface {

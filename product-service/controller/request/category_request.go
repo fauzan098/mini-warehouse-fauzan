@@ -7,9 +7,9 @@ type CreateCategoryRequest struct {
 }
 
 type GetAllCategoryRequest struct {
-	page      int `query:"page"`
+	Page      int `query:"page"`
 	Limit     int `query:"limit"`
-	Search    int `query:"search"`
-	SortBy    int `query:"sort_by"`
-	SortOrder int `query:"sort_order"`
+	Search    string `query:"search"`
+	SortBy    string `query:"sort_by"`
+	SortOrder string `query:"sort_order"`
 }

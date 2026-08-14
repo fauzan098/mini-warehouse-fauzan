@@ -82,7 +82,7 @@ func (c *categoryRepository) GetAllCategory(ctx context.Context, page int, limit
 		// build query
 		query := c.db.Model(&model.Category{})
 
-		if search == "" {
+		if search != "" {
 			query = query.Where("name ILIKE ? OR tagline ILIKE ?", "%"+search+"%", "%"+search+"%")
 		}
 

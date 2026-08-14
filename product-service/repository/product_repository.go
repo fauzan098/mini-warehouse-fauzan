@@ -78,7 +78,7 @@ func (p *productRepository) GetAllProducts(ctx context.Context, page int, limit 
 		// build query
 		query := p.db.Model(&model.Product{})
 
-		if search == "" {
+		if search != "" {
 			query = query.Where("name ILIKE ? OR barcode ILIKE ? OR about ILIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 		}
 

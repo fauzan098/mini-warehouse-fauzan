@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type WarehouseProductInterface interface {
+type WarehouseProductRepositoryInterface interface {
 	GetDetailWarehouse(ctx context.Context, warehouseID uint) (*model.Warehouse, error)
 	GetDetailWarehouseProductByID(ctx context.Context, warehouseProductID uint) (*model.WarehouseProduct, error)
 	CreateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error
@@ -16,7 +16,7 @@ type WarehouseProductInterface interface {
 	UpdateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error
 	DeleteWarehouseProduct(ctx context.Context, warehouseProductID uint) error
 	DeleteAllWarehouseProductByProductID(ctx context.Context, productID uint) error
-	GetWarehouseProductByProductID(ctx context.Context, productID uint) (*model.WarehouseProduct, error)
+	GetWarehouseProductByProductID(ctx context.Context, productID uint) ([]model.WarehouseProduct, error)
 	GetProductTotalStock(ctx context.Context, productID uint) (int, error)
 }
 
@@ -130,26 +130,66 @@ func (w *warehouseProductRepository) GetProductTotalStock(ctx context.Context, p
 }
 
 // GetWarehouseProductByProductID implements [WarehouseProductInterface].
-func (w *warehouseProductRepository) GetWarehouseProductByProductID(ctx context.Context, productID uint) (*model.WarehouseProduct, error) {
+func (w *warehouseProductRepository) GetWarehouseProductByProductID(ctx context.Context, ProductID uint) ([]model.WarehouseProduct, error) {
 	select {
 	case <-ctx.Done():
 		log.Errorf("[WarehouseProductRepository] GetWarehouseProductByProductID - 1: %v", ctx.Err())
 		return nil, ctx.Err()
 	default:
-		return nil, ctx.Err()
+		var warehouseProduct []model.WarehouseProduct
+		if err := w.db.WithContext(ctx).
+			Where("id = ?", ProductID).
+			Preload("Warehouse").
+			Find(&warehouseProduct).Error; err != nil {
+			log.Errorf("[WarehouseProductRepository] GetWarehouseProductByProductID - 1: %v", ctx.Err())
+			return nil, ctx.Err()
+		}
+
+		return warehouseProduct, nil
 	}
 }
 
 // GetWarehouseProductByWarehouseIDAndProductID implements [WarehouseProductInterface].
 func (w *warehouseProductRepository) GetWarehouseProductByWarehouseIDAndProductID(ctx context.Context, warehouseID uint, ProductID uint) (*model.WarehouseProduct, error) {
-	panic("unimplemented")
+	select {
+	case <-ctx.Done():
+		log.Errorf("[WarehouseProductRepository] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", ctx.Err())
+		return nil, ctx.Err()
+	default:
+		var warehouseProduct model.WarehouseProduct
+		if err := w.db.WithContext(ctx).
+			Where("warehouse_id = ? AND product_id = ?", warehouseID ,ProductID).
+			Preload("Warehouse").
+			Find(&warehouseProduct).Error; err != nil {
+			log.Errorf("[WarehouseProductRepository] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", ctx.Err())
+			return nil, ctx.Err()
+		}
+
+		return &warehouseProduct, nil
+	}
 }
 
 // UpdateWarehouseProduct implements [WarehouseProductInterface].
 func (w *warehouseProductRepository) UpdateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error {
-	panic("unimplemented")
+	select {
+	case <-ctx.Done():
+		log.Errorf("[WarehouseProductRepository] UpdateWarehouseProduct - 1: %v", ctx.Err())
+		return ctx.Err()
+	default:
+		existingWarehouseProduct := model.WarehouseProduct{}
+		if err := w.db.WithContext(ctx).Where("id = ?", warehouseProduct.ID).First(&existingWarehouseProduct).Error; err != nil {
+			log.Errorf("[WarehouseProductRepository] UpdateWarehouseProduct - 1: %v", ctx.Err())
+			return ctx.Err()
+		}
+
+		existingWarehouseProduct.Stock = warehouseProduct.Stock
+		existingWarehouseProduct.WarehouseID = warehouseProduct.WarehouseID
+		existingWarehouseProduct.ProductID = warehouseProduct.ProductID
+
+		return w.db.WithContext(ctx).Save(&existingWarehouseProduct).Error
+	}
 }
 
-func NewWarehouseProductRepository(db *gorm.DB) WarehouseProductInterface {
+func NewWarehouseProductRepository(db *gorm.DB) WarehouseProductRepositoryInterface {
 	return &warehouseProductRepository{db: db}
 }

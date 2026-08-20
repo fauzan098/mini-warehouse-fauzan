@@ -7,6 +7,7 @@ import (
 	"micro-warehouse/warehouse-service/repository"
 
 	"github.com/gofiber/fiber/v2/log"
+	"gorm.io/gorm"
 )
 
 type WarehouseProductUsecaseInterface interface {
@@ -30,7 +31,12 @@ type warehouseProductUsecase struct {
 func (w *warehouseProductUsecase) CreateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error {
 	result, err := w.warehouseProductRepo.GetWarehouseProductByWarehouseIDAndProductID(ctx, warehouseProduct.WarehouseID, warehouseProduct.ProductID)
 	if err != nil {
-		log.Errorf("[warehouseProductUsecase] CreateWarehouseProduct - 1: %v", err)
+		if err != gorm.ErrRecordNotFound {
+			log.Errorf("[warehouseProductUsecase] CreateWarehouseProduct - 1: %v", err)
+			return err	
+		}
+
+		log.Errorf("[warehouseProductUsecase] CreateWarehouseProduct - 2: %v", err)
 		return err
 	}
 

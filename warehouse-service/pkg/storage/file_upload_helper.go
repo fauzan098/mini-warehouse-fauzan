@@ -35,7 +35,7 @@ func (h *FileUploadHelper) UploadPhoto(ctx context.Context, file *multipart.File
 		return nil, err
 	}
 
-	result, err := h.storege.UploadFile(ctx, file, "users")
+	result, err := h.storege.UploadFile(ctx, file, "warehouses")
 	if err != nil {
 		log.Errorf("failed to upload file: %v", err)
 		return nil, err

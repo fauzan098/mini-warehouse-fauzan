@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"micro-warehouse/warehouse-service/configs"
 	"net/http"
+	"time"
+
+	"micro-warehouse/warehouse-service/configs"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -20,7 +22,7 @@ type ProductClientInterface interface {
 
 type ProductClient struct {
 	urlProductService string
-	httpClient *http.Client
+	httpClient        *http.Client
 }
 
 // GetProductByID implements [ProductClientInterface].
@@ -71,7 +73,7 @@ func (p *ProductClient) GetProducts(ctx context.Context, page int, limit int, se
 		return nil, err
 	}
 
-	resp, err :=p.httpClient.Do(req)
+	resp, err := p.httpClient.Do(req)
 	if err != nil {
 		log.Errorf("[ProductClient] GetProducts - 2: %v", err)
 		return nil, err
@@ -109,7 +111,7 @@ func (p *ProductClient) HealtCheck(ctx context.Context) error {
 		return err
 	}
 
-	resp, err :=p.httpClient.Do(req)
+	resp, err := p.httpClient.Do(req)
 	if err != nil {
 		log.Errorf("[ProductClient] GetProducts - 2: %v", err)
 		return err
@@ -130,6 +132,7 @@ type ProductResponse struct {
 	Name       string `json:"name"`
 	About      string `json:"about"`
 	Price      int64  `json:"price"`
+	Barcode    string `json:"barcode"`
 	Thumbanail string `json:"thumbnail"`
 	Category   struct {
 		ID    uint   `json:"id"`
@@ -150,6 +153,8 @@ type ProductListResponse struct {
 	Error   string            `json:"error,omitempty"`
 }
 
-func NewProductClient(httpClient *http.Client, cfg configs.Config) ProductClientInterface {
-	return &ProductClient{httpClient: httpClient, urlProductService: cfg.App.UrlProductService}
+func NewProductClient(cfg configs.Config) ProductClientInterface {
+	return &ProductClient{httpClient: &http.Client{
+		Timeout: 30 * time.Second,
+	}, urlProductService: cfg.App.UrlProductService}
 }

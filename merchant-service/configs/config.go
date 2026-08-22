@@ -10,7 +10,9 @@ type App struct {
 	AppPort string `json:"app_port"`
 	AppEnv  string `json:"app_env"`
 
-	UrlProductService string `json:"url_product_service"`
+	UrlProductService   string `json:"url_product_service"`
+	UrlWarehouseService string `json:"url_warehouse_service"`
+	UrlUserService      string `json:"url_user_service"`
 }
 
 type SqlDB struct {
@@ -32,7 +34,7 @@ type Redis struct {
 type RabbitMQ struct {
 	Host     string `json:"host"`
 	Port     string `json:"port"`
-	Username     string `json:"username"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
@@ -57,9 +59,11 @@ func (r *RabbitMQ) URL() string {
 func NewConfig() *Config {
 	return &Config{
 		App: App{
-			AppPort:           viper.GetString("APP_PORT"),
-			AppEnv:            viper.GetString("APP_ENV"),
-			UrlProductService: viper.GetString("URL_PRODUCT_SERVICE"),
+			AppPort:             viper.GetString("APP_PORT"),
+			AppEnv:              viper.GetString("APP_ENV"),
+			UrlProductService:   viper.GetString("URL_PRODUCT_SERVICE"),
+			UrlWarehouseService: viper.GetString("URL_WAREHOUSE_SERVICE"),
+			UrlUserService:      viper.GetString("URL_USER_SERVICE"),
 		},
 		SqlDB: SqlDB{
 			Host:           viper.GetString("DATABASE_HOST"),
@@ -77,7 +81,7 @@ func NewConfig() *Config {
 		RabbitMQ: RabbitMQ{
 			Host:     viper.GetString("RABBITMQ_HOST"),
 			Port:     viper.GetString("RABBITMQ_PORT"),
-			Username:     viper.GetString("RABBITMQ_USERNAME"),
+			Username: viper.GetString("RABBITMQ_USERNAME"),
 			Password: viper.GetString("RABBITMQ_PASSWORD"),
 		},
 		Supabase: Supabase{

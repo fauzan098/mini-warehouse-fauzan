@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"micro-warehouse/warehouse-service/configs"
+	"micro-warehouse/merchant-service/configs"
 
 	"github.com/gofiber/fiber/v2/log"
 )

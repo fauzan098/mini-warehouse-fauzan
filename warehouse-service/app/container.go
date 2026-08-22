@@ -5,9 +5,12 @@ import (
 	"micro-warehouse/warehouse-service/controller"
 	"micro-warehouse/warehouse-service/database"
 	"micro-warehouse/warehouse-service/pkg/httpclient"
+	"micro-warehouse/warehouse-service/pkg/rabbitmq"
+	"micro-warehouse/warehouse-service/pkg/redis"
 	"micro-warehouse/warehouse-service/pkg/storage"
 	"micro-warehouse/warehouse-service/repository"
 	"micro-warehouse/warehouse-service/usecase"
+	"time"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -16,6 +19,7 @@ type Container struct {
 	WarehouseController        controller.WarehouseControllerInterface
 	WarehouseProductController controller.WarehouseProductControllerInterface
 	UploadController           controller.UploadControllerInterface
+	RabbitMQConsumer           *rabbitmq.RabbitMQConsumer
 }
 
 func BuildContainer() *Container {
@@ -25,14 +29,22 @@ func BuildContainer() *Container {
 		log.Fatalf("failed connect to database")
 	}
 
+	productClient := httpclient.NewProductClient(*config)
+	redisClient := redis.NewRedisClient(*config)
+	cacheProductClient := httpclient.NewCacheProductClient(productClient, redisClient, 1*time.Hour)
 	warehouseRepo := repository.NewWarehouseRepository(db.DB)
 	warehouseUsecase := usecase.NewWarehouseUsecase(warehouseRepo)
 	warehouseController := controller.NewWarehouseController(warehouseUsecase)
 
 	warehouseProductRepo := repository.NewWarehouseProductRepository(db.DB)
-	productClient := httpclient.NewProductClient(*config)
-	warehouseProductUsecase := usecase.NewWarehouseProductUsecase(warehouseProductRepo, productClient)
+	warehouseProductUsecase := usecase.NewWarehouseProductUsecase(warehouseProductRepo, cacheProductClient)
 	warehouseProductController := controller.NewWarehouseProductController(warehouseProductUsecase)
+
+
+	rabbitMQConsumer, err := rabbitmq.NewRabbitMQConsumer(config.RabbitMQ.URL(), warehouseProductRepo)
+	if err != nil {
+		log.Fatalf("Failed to create rabbitmq consumer: %v", err)
+	}
 
 	supabaseStorage := storage.NewSupabaseStorage(*config)
 	fileUploadHelper := storage.NewFileUploadHelper(supabaseStorage, *config)
@@ -42,5 +54,6 @@ func BuildContainer() *Container {
 		WarehouseController:        warehouseController,
 		WarehouseProductController: warehouseProductController,
 		UploadController:           uploadController,
+		RabbitMQConsumer:           rabbitMQConsumer,
 	}
 }

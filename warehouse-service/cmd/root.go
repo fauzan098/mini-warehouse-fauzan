@@ -14,8 +14,8 @@ var (
 	// userLicense string
 
 	rootCmd = &cobra.Command{
-		Use:   "user-service",
-		Short: "user service CLI",
+		Use:   "warehouse-service",
+		Short: "Warehouse service CLI",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Run(startCmd, args)
 			// runServer()

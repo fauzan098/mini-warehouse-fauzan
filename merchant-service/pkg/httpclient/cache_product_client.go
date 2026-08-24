@@ -60,9 +60,34 @@ func (cpc *CachedProductClient) GetProductByID(ctx context.Context, productID ui
 	return product, nil
 }
 
+func (cpc *CachedProductClient) GetProductByBarcode(ctx context.Context, barcode string) (*ProductResponse, error) {
+	cacheKey := fmt.Sprintf("product:barcode:%s", barcode)
+
+	var cachedProduct ProductResponse
+	if err := cpc.redis.Get(ctx, cacheKey, &cachedProduct); err == nil {
+		log.Infof("[CachedProductClient] GetProductByBarcode - 1: %v", cachedProduct)
+		return &cachedProduct, nil
+	}
+
+	product, err := cpc.client.GetProductByBarcode(ctx, barcode)
+	if err != nil {
+		log.Errorf("[CachedProductClient] GetProductByBarcode - 2: %v", err)
+		return nil, err
+	}
+
+	err = cpc.redis.Set(ctx, cacheKey, product, cpc.ttl)
+	if err != nil {
+		log.Errorf("[CachedProductClient] GetProductByBarcode - 3: %v", err)
+		return nil, err
+	}
+
+	return product, nil
+}
+
 func (cpc *CachedProductClient) GetProducts(ctx context.Context, page, limit int, search, sortBy, sortOrder string) ([]ProductResponse, error) {
 	return cpc.client.GetProducts(ctx, page, limit, search, sortBy, sortOrder)
 }
+
 
 func (cpc *CachedProductClient) HealthCheck(ctx context.Context) error {
 	return cpc.client.HealthCheck(ctx)

@@ -10,7 +10,7 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile     string
+	cfgFile string
 	// userLicense string
 
 	rootCmd = &cobra.Command{
@@ -35,7 +35,7 @@ func Execute() {
 //     }
 
 //     fmt.Printf("Starting User Service on port %s...\n", port)
-    
+
 //     // Masukkan kode untuk inisialisasi database, router, atau server kamu di sini
 // }
 

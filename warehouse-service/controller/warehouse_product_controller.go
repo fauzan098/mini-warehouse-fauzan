@@ -9,8 +9,11 @@ import (
 	"micro-warehouse/warehouse-service/pkg/validator"
 	"micro-warehouse/warehouse-service/usecase"
 
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"gorm.io/gorm"
 )
 
 type WarehouseProductControllerInterface interface {
@@ -257,8 +260,13 @@ func (w *warehouseProductController) GetWarehouseProductByWarehouseIDAndProductI
 	productID := c.Params("product_id")
 	productIDUint := conv.StringToUint(productID)
 
-	warehouseProduct, err := w.warehouseProductUsecase.GetWarehouseProductByWarehouseIDAndProductID(ctx, warehouseIDUint, productIDUint)
+	warehouseProduct, product, err := w.warehouseProductUsecase.GetWarehouseProductByWarehouseIDAndProductID(ctx, warehouseIDUint, productIDUint)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "Warehouse product not found",
+			})
+		}
 		log.Errorf("[WarehouseProductController] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to get warehouse product by warehouse id and product id",
@@ -266,10 +274,23 @@ func (w *warehouseProductController) GetWarehouseProductByWarehouseIDAndProductI
 	}
 
 	respWarehouseProduct := response.WarehouseProductResponse{
-		ID:          warehouseProduct.ID,
-		WarehouseID: warehouseProduct.WarehouseID,
-		ProductID:   warehouseProduct.ProductID,
-		Stock:       warehouseProduct.Stock,
+		ID:                   warehouseProduct.ID,
+		WarehouseID:          warehouseProduct.WarehouseID,
+		ProductID:            warehouseProduct.ProductID,
+		ProductName:          product.Name,
+		ProductAbout:         product.About,
+		ProductPhoto:         product.Thumbanail,
+		ProductPrice:         int(product.Price),
+		ProductCategory:      product.Category.Name,
+		ProductCategoryPhoto: product.Category.Photo,
+		Stock:                warehouseProduct.Stock,
+		Warehouse: response.WarehouseResponse{
+			ID:    warehouseProduct.Warehouse.ID,
+			Name:  warehouseProduct.Warehouse.Name,
+			Address: warehouseProduct.Warehouse.Address,
+			Photo: warehouseProduct.Warehouse.Photo,
+			Phone: warehouseProduct.Warehouse.Phone,
+		},
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -158,11 +158,11 @@ func (w *warehouseProductRepository) GetWarehouseProductByWarehouseIDAndProductI
 	default:
 		var warehouseProduct model.WarehouseProduct
 		if err := w.db.WithContext(ctx).
-			Where("warehouse_id = ? AND product_id = ?", warehouseID ,ProductID).
+			Where("warehouse_id = ? AND product_id = ?", warehouseID, ProductID).
 			Preload("Warehouse").
-			Find(&warehouseProduct).Error; err != nil {
-			log.Errorf("[WarehouseProductRepository] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", ctx.Err())
-			return nil, ctx.Err()
+			First(&warehouseProduct).Error; err != nil {
+			log.Errorf("[WarehouseProductRepository] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", err)
+			return nil, err
 		}
 
 		return &warehouseProduct, nil

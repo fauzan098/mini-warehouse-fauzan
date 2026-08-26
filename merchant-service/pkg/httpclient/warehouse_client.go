@@ -96,6 +96,7 @@ func (w *WarehouseClient) GetWarehouseProductStock(ctx context.Context, warehous
 		log.Errorf("[WarehouseClient] GetWarehouseProductStock - 6: %v", err)
 		return nil, err
 	}
+	fmt.Println("lalal")
 
 	return &warehouseProductStockResponse.Data, nil
 }

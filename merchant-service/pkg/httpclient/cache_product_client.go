@@ -3,28 +3,29 @@ package httpclient
 import (
 	"context"
 	"fmt"
-	"micro-warehouse/merchant-service/pkg/redis"
 	"time"
+
+	"micro-warehouse/merchant-service/pkg/redis"
 
 	"github.com/gofiber/fiber/v2/log"
 )
 
 type CachedProductClient struct {
 	client ProductClientInterface
-	redis *redis.RedisClient
-	ttl time.Duration
+	redis  *redis.RedisClient
+	ttl    time.Duration
 }
 
-func NewCacheProductClient(productClient ProductClientInterface, redisClient *redis.RedisClient, ttl time.Duration) *CachedProductClient {
+func NewCachedProductClient(productClient ProductClientInterface, redisClient *redis.RedisClient) *CachedProductClient {
 	return &CachedProductClient{
 		client: productClient,
-		redis: redisClient,
-		ttl: 1 * time.Hour,
+		redis:  redisClient,
+		ttl:    1 * time.Hour,
 	}
 }
 
 func (cpc *CachedProductClient) generateCacheKey(prefix string, id uint) string {
-	return fmt.Sprintf("product:%s:%d",prefix, id)
+	return fmt.Sprintf("product:%s:%d", prefix, id)
 }
 
 func (cpc *CachedProductClient) generateCacheKeyMultiple(prefix string, ids []uint) string {
@@ -45,7 +46,7 @@ func (cpc *CachedProductClient) GetProductByID(ctx context.Context, productID ui
 		return &cacheProduct, nil
 	}
 
-	product, err := cpc.GetProductByID(ctx, productID)
+	product, err := cpc.client.GetProductByID(ctx, productID)
 	if err != nil {
 		log.Infof("[CacheProductClient] GetProductByID - 2: %v", cacheProduct)
 		return nil, err
@@ -87,7 +88,6 @@ func (cpc *CachedProductClient) GetProductByBarcode(ctx context.Context, barcode
 func (cpc *CachedProductClient) GetProducts(ctx context.Context, page, limit int, search, sortBy, sortOrder string) ([]ProductResponse, error) {
 	return cpc.client.GetProducts(ctx, page, limit, search, sortBy, sortOrder)
 }
-
 
 func (cpc *CachedProductClient) HealthCheck(ctx context.Context) error {
 	return cpc.client.HealthCheck(ctx)

@@ -3,8 +3,9 @@ package httpclient
 import (
 	"context"
 	"fmt"
-	"micro-warehouse/merchant-service/pkg/redis"
 	"time"
+
+	"micro-warehouse/merchant-service/pkg/redis"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -15,11 +16,11 @@ type CachedWarehouseClient struct {
 	ttl    time.Duration
 }
 
-func NewCacheWarehouseClient(warehouseClient WarehouseClientInterface, redisClient *redis.RedisClient, ttl time.Duration) *CachedWarehouseClient {
+func NewCachedWarehouseClient(warehouseClient WarehouseClientInterface, redisClient *redis.RedisClient) *CachedWarehouseClient {
 	return &CachedWarehouseClient{
 		client: warehouseClient,
-		redis: redisClient,
-		ttl: 1 * time.Hour,
+		redis:  redisClient,
+		ttl:    1 * time.Hour,
 	}
 }
 
@@ -52,7 +53,7 @@ func (cwc *CachedWarehouseClient) GetWarehouseByID(ctx context.Context, warehous
 }
 
 func (cwc *CachedWarehouseClient) GetWarehouseProductStock(ctx context.Context, warehouseID uint, productID uint) (*WarehouseProductStockResponse, error) {
-	cacheKey := cwc.generateCacheKey("single", warehouseID)
+	cacheKey := fmt.Sprintf("warehouse:stock:%d:%d", warehouseID, productID)
 
 	var cachedWarehouseProductStock WarehouseProductStockResponse
 	if err := cwc.redis.Get(ctx, cacheKey, &cachedWarehouseProductStock); err == nil {

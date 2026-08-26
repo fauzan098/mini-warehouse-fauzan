@@ -14,7 +14,7 @@ type WarehouseProductUsecaseInterface interface {
 	GetDetailWarehouse(ctx context.Context, warehouseID uint) (*model.Warehouse, []httpclient.ProductResponse, error)
 	GetDetailWarehouseProductByID(ctx context.Context, warehouseProductID uint) (*model.WarehouseProduct, *httpclient.ProductResponse, error)
 	CreateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error
-	GetWarehouseProductByWarehouseIDAndProductID(ctx context.Context, warehouseID, ProductID uint) (*model.WarehouseProduct, error)
+	GetWarehouseProductByWarehouseIDAndProductID(ctx context.Context, warehouseID, ProductID uint) (*model.WarehouseProduct, *httpclient.ProductResponse, error)
 	UpdateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error
 	DeleteWarehouseProduct(ctx context.Context, warehouseProductID uint) error
 	DeleteAllWarehouseProductByProductID(ctx context.Context, productID uint) error
@@ -110,8 +110,20 @@ func (w *warehouseProductUsecase) GetWarehouseProductByProductID(ctx context.Con
 }
 
 // GetWarehouseProductByWarehouseIDAndProductID implements [WarehouseProductUsecaseInterface].
-func (w *warehouseProductUsecase) GetWarehouseProductByWarehouseIDAndProductID(ctx context.Context, warehouseID uint, ProductID uint) (*model.WarehouseProduct, error) {
-	return w.warehouseProductRepo.GetWarehouseProductByWarehouseIDAndProductID(ctx, warehouseID, ProductID)
+func (w *warehouseProductUsecase) GetWarehouseProductByWarehouseIDAndProductID(ctx context.Context, warehouseID uint, ProductID uint) (*model.WarehouseProduct, *httpclient.ProductResponse, error) {
+	warehouseProduct, err := w.warehouseProductRepo.GetWarehouseProductByWarehouseIDAndProductID(ctx, warehouseID, ProductID)
+	if err != nil {
+		log.Errorf("[WarehouseProductUsecase] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", err)
+		return nil, nil, err
+	}
+
+	product, err := w.productClient.GetProductByID(ctx, warehouseProduct.ProductID)
+	if err != nil {
+		log.Errorf("[WarehouseProductUsecase] GetWarehouseProductByWarehouseIDAndProductID - 2: %v", err)
+		return nil, nil, err
+	}
+
+	return warehouseProduct, product, nil
 }
 
 // UpdateWarehouseProduct implements [WarehouseProductUsecaseInterface].

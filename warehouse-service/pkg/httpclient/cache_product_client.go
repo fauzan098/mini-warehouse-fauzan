@@ -45,7 +45,7 @@ func (cpc *CachedProductClient) GetProductByID(ctx context.Context, productID ui
 		return &cacheProduct, nil
 	}
 
-	product, err := cpc.GetProductByID(ctx, productID)
+	product, err := cpc.client.GetProductByID(ctx, productID)
 	if err != nil {
 		log.Infof("[CacheProductClient] GetProductByID - 2: %v", cacheProduct)
 		return nil, err

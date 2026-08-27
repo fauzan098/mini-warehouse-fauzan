@@ -155,6 +155,7 @@ func (w *warehouseController) GetWarehouseByID(ctx *fiber.Ctx) error {
 		Name:  warehouse.Name,
 		Photo: warehouse.Photo,
 		Phone: warehouse.Phone,
+		Address: warehouse.Address,
 	}
 
 	var warehouseProductResponse []response.WarehouseProductResponse

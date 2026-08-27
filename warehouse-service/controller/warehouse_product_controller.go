@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"errors"
+	_ "fmt"
+
 	"micro-warehouse/warehouse-service/controller/request"
 	"micro-warehouse/warehouse-service/controller/response"
 	"micro-warehouse/warehouse-service/model"
@@ -8,8 +11,6 @@ import (
 	"micro-warehouse/warehouse-service/pkg/httpclient"
 	"micro-warehouse/warehouse-service/pkg/validator"
 	"micro-warehouse/warehouse-service/usecase"
-
-	"errors"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -53,11 +54,11 @@ func (w *warehouseProductController) CreateWarehouseProduct(c *fiber.Ctx) error 
 
 	warehouseID := c.Params("warehouse_id")
 	warehouseIDUint := conv.StringToUint(warehouseID)
-
+	
 	reqModel := model.WarehouseProduct{
-		ID:        warehouseIDUint,
-		ProductID: req.ProductID,
-		Stock:     req.Stock,
+		WarehouseID: warehouseIDUint,
+		ProductID:   req.ProductID,
+		Stock:       req.Stock,
 	}
 
 	if err := w.warehouseProductUsecase.CreateWarehouseProduct(ctx, &reqModel); err != nil {
@@ -285,11 +286,11 @@ func (w *warehouseProductController) GetWarehouseProductByWarehouseIDAndProductI
 		ProductCategoryPhoto: product.Category.Photo,
 		Stock:                warehouseProduct.Stock,
 		Warehouse: response.WarehouseResponse{
-			ID:    warehouseProduct.Warehouse.ID,
-			Name:  warehouseProduct.Warehouse.Name,
+			ID:      warehouseProduct.Warehouse.ID,
+			Name:    warehouseProduct.Warehouse.Name,
 			Address: warehouseProduct.Warehouse.Address,
-			Photo: warehouseProduct.Warehouse.Photo,
-			Phone: warehouseProduct.Warehouse.Phone,
+			Photo:   warehouseProduct.Warehouse.Photo,
+			Phone:   warehouseProduct.Warehouse.Phone,
 		},
 	}
 

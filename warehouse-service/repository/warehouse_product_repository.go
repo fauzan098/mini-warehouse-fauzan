@@ -80,7 +80,7 @@ func (w *warehouseProductRepository) GetDetailWarehouse(ctx context.Context, war
 		if err := w.db.WithContext(ctx).
 			Where("id = ?", warehouseID).
 			Select("id", "name", "photo", "phone").
-			Preload("WarehouseProduct").First(&warehouse).Error; err != nil {
+			Preload("WarehouseProducts").First(&warehouse).Error; err != nil {
 			log.Errorf("[WarehouseProductRepository] GetDetailWarehouse - 2: %v", err)
 			return nil, err
 		}

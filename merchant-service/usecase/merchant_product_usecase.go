@@ -50,7 +50,7 @@ func (m *merchantProductUsecase) CreateMerchantProduct(ctx context.Context, merc
 	}
 
 	stockReductionEvent := rabbitmq.StockReductionEvent{
-		WarhouseID: merchantProduct.WarehouseID,
+		WarehouseID: merchantProduct.WarehouseID,
 		ProductID:  merchantProduct.ProductID,
 		Stock:      merchantProduct.Stock,
 		MerchantID: merchantProduct.MerchantID,

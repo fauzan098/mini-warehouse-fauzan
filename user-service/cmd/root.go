@@ -15,7 +15,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:   "user-service",
-		Short: "user service CLI",
+		Short: "User Service CLI",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Run(startCmd, args)
 			// runServer()
@@ -28,31 +28,10 @@ func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
-// func runServer() {
-//     port := viper.GetString("PORT")
-//     if port == "" {
-//         port = "8080" // default port
-//     }
-
-//     fmt.Printf("Starting User Service on port %s...\n", port)
-    
-//     // Masukkan kode untuk inisialisasi database, router, atau server kamu di sini
-// }
-
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-	// rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
-	// rootCmd.PersistentFlags().StringVarP(&userLicense, "license", "l", "", "name of license for the project")
-	// rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
-	// viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-	// viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-	// viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
-	// viper.SetDefault("license", "apache")
-
-	// rootCmd.AddCommand(addCmd)
-	// rootCmd.AddCommand(initCmd)
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "help message for toggle")
 }
@@ -64,13 +43,6 @@ func initConfig() {
 	} else {
 		// Find home directory.
 		viper.SetConfigFile(`.env`)
-		// home, err := os.UserHomeDir()
-		// cobra.CheckErr(err)
-
-		// // Search config in home directory with name ".cobra" (without extension).
-		// viper.AddConfigPath(home)
-		// viper.SetConfigType("yaml")
-		// viper.SetConfigName(".cobra")
 	}
 
 	viper.AutomaticEnv()

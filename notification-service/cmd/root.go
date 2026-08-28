@@ -14,8 +14,8 @@ var (
 	// userLicense string
 
 	rootCmd = &cobra.Command{
-		Use:   "merchant-service",
-		Short: "Merchant Service CLI",
+		Use:   "notification-service",
+		Short: "Notification Service CLI",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Run(startCmd, args)
 			// runServer()

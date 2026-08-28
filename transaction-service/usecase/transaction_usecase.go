@@ -3,11 +3,12 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"micro-warehouse/transaction-service/model"
 	"micro-warehouse/transaction-service/pkg/httpclient"
 	"micro-warehouse/transaction-service/pkg/rabbitmq"
 	"micro-warehouse/transaction-service/repository"
-	"time"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -161,7 +162,6 @@ func NewTransactionUsecase(transactionRepo repository.TransactionRepositoryInter
 }
 
 func (tu *transactionUsecase) validateProductStocks(ctx context.Context, transaction model.Transaction) error {
-
 	for _, product := range transaction.TransactionProducts {
 		// Get stock information from merchant service
 		merchantProduct, err := tu.merchantClient.GetMerchantProductStock(

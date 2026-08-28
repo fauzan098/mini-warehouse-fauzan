@@ -26,7 +26,7 @@ type WarehouseClient struct {
 
 // GetWarehouseByID implements [WarehouseClientInterface].
 func (w *WarehouseClient) GetWarehouseByID(ctx context.Context, warehouseID uint) (*WarehouseResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/warehouse/%d", w.UrlWarehouseService, warehouseID)
+	url := fmt.Sprintf("%s/api/v1/warehouses/%d", w.UrlWarehouseService, warehouseID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

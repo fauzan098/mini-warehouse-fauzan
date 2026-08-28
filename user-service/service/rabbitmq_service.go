@@ -35,7 +35,7 @@ func (r *rabbitMQService) Close() error {
 	if r.ch != nil {
 		r.ch.Close()
 	}
-	
+
 	if r.conn != nil {
 		return r.conn.Close()
 	}

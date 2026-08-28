@@ -7,16 +7,15 @@ import (
 	"syscall"
 	"time"
 
-	"micro-warehouse/merchant-service/configs"
-	"micro-warehouse/merchant-service/database"
-	"micro-warehouse/merchant-service/pkg/rabbitmq"
-	"micro-warehouse/merchant-service/repository"
+	"micro-warehouse/transaction-service/configs"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+
 	zerolog "github.com/rs/zerolog/log"
 )
 
@@ -36,28 +35,8 @@ func RunServer() {
 		Format: "[${time}] $ip ${status} - ${latency}  ${method}  ${path}\n",
 	}))
 
-	// app.Use(middlewareGateway.GatewayAuth())
-
 	container := BuildContainer()
 	SetupRoutes(app, container)
-
-	db, err := database.ConnectionPostgres(*cfg)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	merchantProductRepo := repository.NewMerchantProductRepository(db.DB)
-	stockConsumer, err := rabbitmq.NewStockConsumer(cfg.RabbitMQ.URL(), merchantProductRepo)
-	if err != nil {
-		log.Fatalf("Failed to create stock consumer: %v", err)
-	} else {
-		go func() {
-			ctx := context.Background()
-			if err := stockConsumer.ConsumeStockReductionEvents(ctx); err != nil {
-				log.Errorf("Failed to consume stock reduction events: %v", err)
-			}
-		}()
-	}
 
 	port := cfg.App.AppPort
 	if port == "" {

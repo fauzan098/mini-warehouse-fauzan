@@ -14,6 +14,24 @@ const (
 	PaymentStatusCancel  = "cancel"
 )
 
+func ConvertMidtransStatusToInternal(midtransStatus string) string {
+	statusMap := map[string]string{
+		"capture":    PaymentStatusSuccess,
+		"settlement": PaymentStatusSuccess,
+		"pending":    PaymentStatusPending,
+		"deny":       PaymentStatusFailed,
+		"cancel":     PaymentStatusCancel,
+		"expire":     PaymentStatusExpired,
+	}
+
+	if internalStatus, exists := statusMap[midtransStatus]; exists {
+		return internalStatus
+	}
+
+	// Default fallback untuk status yang tidak dikenal
+	return PaymentStatusFailed
+}
+
 const (
 	PaymentMethodQRIS = "qris"
 )

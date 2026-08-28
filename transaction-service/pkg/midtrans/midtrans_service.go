@@ -8,7 +8,7 @@ import (
 	"github.com/midtrans/midtrans-go/snap"
 )
 
-type MidtranseServiceInterface interface {
+type MidtransServiceInterface interface {
 	CreateTransaction(req CreateTransactionRequest) (*CreateTransactionResponse, error)
 }
 
@@ -70,6 +70,6 @@ func (m *MidtransService) CreateTransaction(req CreateTransactionRequest) (*Crea
 	}, nil
 }
 
-func NewMidtransService(config configs.Config) MidtranseServiceInterface {
+func NewMidtransService(config configs.Config) MidtransServiceInterface {
 	return &MidtransService{config: &config}
 }

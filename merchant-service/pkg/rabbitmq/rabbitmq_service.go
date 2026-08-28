@@ -15,7 +15,7 @@ type RabbitMQService struct {
 }
 
 type StockReductionEvent struct {
-	WarhouseID uint      `json:"warhouse_id"`
+	WarehouseID uint      `json:"warhouse_id"`
 	ProductID  uint      `json:"product_id"`
 	Stock      int       `json:"stock"`
 	MerchantID uint      `json:"merchant_id"`

@@ -2,15 +2,14 @@ package app
 
 import (
 	"context"
+	"micro-warehouse/notification-service/configs"
+	"micro-warehouse/notification-service/pkg/email"
+	"micro-warehouse/notification-service/pkg/rabbitmq"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"micro-warehouse/merchant-service/configs"
-	"micro-warehouse/merchant-service/database"
-	"micro-warehouse/merchant-service/pkg/rabbitmq"
-	"micro-warehouse/merchant-service/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -23,6 +22,25 @@ import (
 func RunServer() {
 	cfg := configs.NewConfig()
 
+	rabbitMQService, err := rabbitmq.NewRabbitMQService(*cfg)
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+
+	defer rabbitMQService.Close()
+
+	emailService := email.NewEmailService(*cfg)
+
+	consumerCtx, consumerCancel := context.WithCancel(context.Background())
+	defer consumerCancel()
+
+	err = rabbitMQService.ConsumeEmail(consumerCtx, emailService)
+	if err != nil {
+		log.Errorw("Failed to start email consumer", "error", err)
+	}
+
+	zerolog.Printf("RabbitMQ consumers started successfully")
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			zerolog.Printf("Error: %v", err)
@@ -30,34 +48,13 @@ func RunServer() {
 		},
 	})
 
-	app.Use(recover.New())
 	app.Use(cors.New())
+	app.Use(recover.New())
 	app.Use(logger.New(logger.Config{
-		Format: "[${time}] $ip ${status} - ${latency}  ${method}  ${path}\n",
+		Format: "[${time}] ${ip} ${status} - ${latency} ${method} ${path}\n",
 	}))
 
-	// app.Use(middlewareGateway.GatewayAuth())
-
-	container := BuildContainer()
-	SetupRoutes(app, container)
-
-	db, err := database.ConnectionPostgres(*cfg)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	merchantProductRepo := repository.NewMerchantProductRepository(db.DB)
-	stockConsumer, err := rabbitmq.NewStockConsumer(cfg.RabbitMQ.URL(), merchantProductRepo)
-	if err != nil {
-		log.Fatalf("Failed to create stock consumer: %v", err)
-	} else {
-		go func() {
-			ctx := context.Background()
-			if err := stockConsumer.ConsumeStockReductionEvents(ctx); err != nil {
-				log.Errorf("Failed to consume stock reduction events: %v", err)
-			}
-		}()
-	}
+	BuildContainer(rabbitMQService, emailService)
 
 	port := cfg.App.AppPort
 	if port == "" {
@@ -66,7 +63,7 @@ func RunServer() {
 			log.Fatalf("Server port not specified")
 		}
 	}
-	zerolog.Printf("Starting server on port: %s", port)
+	zerolog.Printf("Starting notification service on port: %s", port)
 
 	go func() {
 		if err := app.Listen(":" + port); err != nil {

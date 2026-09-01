@@ -5,6 +5,7 @@ import (
 	"micro-warehouse/notification-service/configs"
 	"micro-warehouse/notification-service/pkg/email"
 	"micro-warehouse/notification-service/pkg/rabbitmq"
+	middlewareGateway "micro-warehouse/notification-service/middleware"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,6 +54,8 @@ func RunServer() {
 	app.Use(logger.New(logger.Config{
 		Format: "[${time}] ${ip} ${status} - ${latency} ${method} ${path}\n",
 	}))
+
+	app.Use(middlewareGateway.GatewayAuth())
 
 	BuildContainer(rabbitMQService, emailService)
 

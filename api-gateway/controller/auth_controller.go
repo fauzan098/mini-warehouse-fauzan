@@ -30,7 +30,7 @@ type UserServiceResponse struct {
 	Data struct {
 		UserID uint     `json:"user_id"`
 		Email  string   `json:"email"`
-		Role   []string `json:"role"`
+		RoleName   []string `json:"role_name"`
 	} `json:"data"`
 }
 
@@ -135,10 +135,10 @@ func (ac *AuthController) forwardLoginRequest(loginReq LoginRequest) (*LoginResp
 	}
 
 	rolesStr := ""
-	if len(userServiceResp.Data.Role) > 0 {
-		rolesStr = userServiceResp.Data.Role[0]
-		for i := 1; i < len(userServiceResp.Data.Role); i++ {
-			rolesStr += "," + userServiceResp.Data.Role[i]
+	if len(userServiceResp.Data.RoleName) > 0 {
+		rolesStr = userServiceResp.Data.RoleName[0]
+		for i := 1; i < len(userServiceResp.Data.RoleName); i++ {
+			rolesStr += "," + userServiceResp.Data.RoleName[i]
 		}
 	}
 

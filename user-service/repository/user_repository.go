@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	_ "fmt"
 
 	"micro-warehouse/user-service/model"
 
@@ -223,7 +222,6 @@ func (u userRepository) GetUserByEmail(ctx context.Context, email string) (*mode
 	default:
 	}
 
-	// get paginated data
 	modelUsers := model.User{}
 	if err := u.db.WithContext(ctx).Select("id", "name", "email", "password", "photo", "phone", "created_at").
 		Where("email = ?", email).
@@ -232,6 +230,7 @@ func (u userRepository) GetUserByEmail(ctx context.Context, email string) (*mode
 		log.Errorf("[UserRepository] GetUserByEmail - 2: %v", err)
 		return nil, err
 	}
+
 	return &modelUsers, nil
 }
 

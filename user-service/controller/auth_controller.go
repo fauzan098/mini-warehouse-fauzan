@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"micro-warehouse/user-service/controller/request"
 	"micro-warehouse/user-service/controller/response"
 	"micro-warehouse/user-service/pkg/conv"
@@ -24,14 +25,14 @@ func (a *AuthController) Login(c *fiber.Ctx) error {
 	ctx := c.Context()
 	var loginRequest request.LoginRequest
 	if err := c.BodyParser(&loginRequest); err != nil {
-		log.Errorf("[AuthController.login] Login - 1: %v", err.Error())
+		log.Errorf("[AuthController.Login] Login - 1: %v", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
 		})
 	}
 
-	if err := validator.Validate(&loginRequest); err != nil {
-		log.Errorf("[AuthController.login] Login - 2: %v", err.Error())
+	if err := validator.Validate(loginRequest); err != nil {
+		log.Errorf("[AuthController.Login] Login - 2: %v", err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
 		})
@@ -39,19 +40,28 @@ func (a *AuthController) Login(c *fiber.Ctx) error {
 
 	user, err := a.AuthService.GetUserByEmail(ctx, loginRequest.Email)
 	if err != nil {
-		log.Errorf("[AuthController.login] Login - 3: %v", err.Error())
+		log.Errorf("[AuthController.Login] Login - 3: %v", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Internal Server Error",
+			"message": "Internal server error",
+		})
+	}
+
+	if user == nil {
+		log.Errorf("[AuthController.Login] Login - 4: %v", err.Error())
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
 		})
 	}
 
 	isSame := conv.CheckPasswordHash(loginRequest.Password, user.Password)
 	if !isSame {
-		log.Errorf("[AuthController.login] Login - 3: %v", err.Error())
+		log.Errorf("[AuthController.Login] Login - 5: %v", err.Error())
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid Email or Password",
+			"message": "Invalid email or password",
 		})
 	}
+
+	fmt.Println(user.Roles)
 
 	var roles []string
 	for _, r := range user.Roles {
@@ -65,7 +75,7 @@ func (a *AuthController) Login(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Login Successfuly",
+		"message": "Login successful",
 		"data":    loginResp,
 	})
 }

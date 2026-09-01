@@ -21,7 +21,7 @@ func SeedManager(db *gorm.DB) {
 	}
 
 	admin := model.User{
-		Name: "manager",
+		Name: "Manager",
 		Email: "managa@gmail.com",
 		Password: bytes,
 		Roles: []model.Role{modelRole},

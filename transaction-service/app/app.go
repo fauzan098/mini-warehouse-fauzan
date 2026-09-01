@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"micro-warehouse/transaction-service/configs"
+	middlewareGateway "micro-warehouse/transaction-service/middleware"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -34,6 +35,8 @@ func RunServer() {
 	app.Use(logger.New(logger.Config{
 		Format: "[${time}] $ip ${status} - ${latency}  ${method}  ${path}\n",
 	}))
+
+	app.Use(middlewareGateway.GatewayAuth())
 
 	container := BuildContainer()
 	SetupRoutes(app, container)

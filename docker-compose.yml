@@ -151,6 +151,7 @@ services:
         - ./user-service/.env
     ports:
         - "8081:8081"
+    restart: unless-stopped
     depends_on:
       user_db:
         condition: service_healthy
@@ -173,6 +174,7 @@ services:
       - ./product-service/.env
     ports:
       - "8082:8082"
+    restart: unless-stopped
     depends_on:
       product_db:
           condition: service_healthy
@@ -195,6 +197,7 @@ services:
       - ./transaction-service/.env
     ports:
       - "8085:8085"
+    restart: unless-stopped
     depends_on:
       transaction_db:
           condition: service_healthy
@@ -221,6 +224,7 @@ services:
       - ./warehouse-service/.env
     ports:
       - "8083:8083"
+    restart: unless-stopped
     depends_on:
       warehouse_db:
         condition: service_healthy
@@ -245,6 +249,7 @@ services:
       - ./merchant-service/.env
     ports:
       - "8084:8084"
+    restart: unless-stopped
     depends_on:
       merchant_db:
         condition: service_healthy
@@ -271,6 +276,7 @@ services:
       - ./notification-service/.env
     ports:
       - "8086:8086"
+    restart: unless-stopped
     depends_on:
       notification_db:
         condition: service_healthy

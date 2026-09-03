@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"micro-warehouse/transaction-service/configs"
+	"micro-warehouse/transaction-service/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -22,20 +23,36 @@ type MerchantClientInterface interface {
 }
 
 type MerchantClient struct {
-	UrlMerchantService string
-	httpClient         *http.Client
-	// config              configs.Config
+	UrlApiGateway string
+	httpClient    *http.Client
+	config        configs.Config
+}
+
+func (m *MerchantClient) generateInternalToken() (string, error) {
+	return jwt.GenerateInternalToken(m.config)
 }
 
 // GetMerchantByID implements [MerchantClientInterface].
 func (m *MerchantClient) GetMerchantByID(ctx context.Context, merchantID uint) (*Merchant, error) {
-	url := fmt.Sprintf("%s/api/v1/merchants/%d", m.UrlMerchantService, merchantID)
+	url := fmt.Sprintf("%s/api/v1/merchants/%d", m.UrlApiGateway, merchantID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[MerchantClient] GetMerchantByID - 1: %v", err)
 		return nil, err
 	}
+
+	token, err := m.generateInternalToken()
+
+	if err != nil {
+		log.Errorf("[MerchantClient] GetMerchantByID - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
@@ -69,13 +86,25 @@ func (m *MerchantClient) GetMerchantByID(ctx context.Context, merchantID uint) (
 
 // GetMerchantProductStock implements [MerchantClientInterface].
 func (m *MerchantClient) GetMerchantProductStock(ctx context.Context, merchantID uint, productID uint) (*MerchantProduct, error) {
-	url := fmt.Sprintf("%s/api/v1/merchant-products?merchant_id=%d&product_id=%d", m.UrlMerchantService, merchantID, productID)
+	url := fmt.Sprintf("%s/api/v1/merchant-products?merchant_id=%d&product_id=%d", m.UrlApiGateway, merchantID, productID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[MerchantClient] GetMerchantProductStock - 1: %v", err)
 		return nil, err
 	}
+
+	token, err := m.generateInternalToken()
+
+	if err != nil {
+		log.Errorf("[MerchantClient] GetMerchantProductStock - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
@@ -119,13 +148,25 @@ func (m *MerchantClient) GetMerchantProductStock(ctx context.Context, merchantID
 
 // GetMerchantProducts implements [MerchantClientInterface].
 func (m *MerchantClient) GetMerchantProducts(ctx context.Context, merchantID uint) ([]MerchantProduct, error) {
-	url := fmt.Sprintf("%s/api/v1/merchant-products?merchant_id=%d", m.UrlMerchantService, merchantID)
+	url := fmt.Sprintf("%s/api/v1/merchant-products?merchant_id=%d", m.UrlApiGateway, merchantID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[MerchantClient] GetMerchantProducts - 1: %v", err)
 		return nil, err
 	}
+
+	token, err := m.generateInternalToken()
+
+	if err != nil {
+		log.Errorf("[MerchantClient] GetMerchantProducts - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
@@ -159,13 +200,25 @@ func (m *MerchantClient) GetMerchantProducts(ctx context.Context, merchantID uin
 
 // GetMerchantsByKeeperID implements [MerchantClientInterface].
 func (m *MerchantClient) GetMerchantsByKeeperID(ctx context.Context, keeperID uint) ([]Merchant, error) {
-	url := fmt.Sprintf("%s/api/v1/merchants?keeper_id=%d", m.UrlMerchantService, keeperID)
+	url := fmt.Sprintf("%s/api/v1/merchants?keeper_id=%d", m.UrlApiGateway, keeperID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[MerchantClient] GetMerchantsByKeeperID - 1: %v", err)
 		return nil, err
 	}
+
+	token, err := m.generateInternalToken()
+
+	if err != nil {
+		log.Errorf("[MerchantClient] GetMerchantsByKeeperID - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
@@ -227,6 +280,7 @@ func NewMerchantClient(cfg configs.Config) MerchantClientInterface {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		UrlMerchantService: cfg.App.UrlMerchantService,
+		UrlApiGateway: cfg.App.UrlApiGateway,
+		config:        cfg,
 	}
 }

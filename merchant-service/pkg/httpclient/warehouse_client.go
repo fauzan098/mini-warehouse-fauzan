@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"micro-warehouse/merchant-service/configs"
 	"net/http"
 	"time"
+
+	"micro-warehouse/merchant-service/configs"
+	"micro-warehouse/merchant-service/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -19,14 +21,18 @@ type WarehouseClientInterface interface {
 }
 
 type WarehouseClient struct {
-	UrlWarehouseService string
-	httpClient          *http.Client
-	// config              configs.Config
+	UrlApiGateway string
+	httpClient    *http.Client
+	config        configs.Config
+}
+
+func (w *WarehouseClient) generateInternalToken() (string, error) {
+	return jwt.GenerateInternalToken(w.config)
 }
 
 // GetWarehouseByID implements [WarehouseClientInterface].
 func (w *WarehouseClient) GetWarehouseByID(ctx context.Context, warehouseID uint) (*WarehouseResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/warehouses/%d", w.UrlWarehouseService, warehouseID)
+	url := fmt.Sprintf("%s/api/v1/warehouses/%d", w.UrlApiGateway, warehouseID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -34,6 +40,17 @@ func (w *WarehouseClient) GetWarehouseByID(ctx context.Context, warehouseID uint
 		return nil, err
 	}
 
+	token, err := w.generateInternalToken()
+	if err != nil {
+		log.Errorf("[WarehouseClient] GetWarehouseProductStock - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
+	
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
 		log.Errorf("[WarehouseClient] GetWarehouseByID - 3: %v", err)
@@ -64,13 +81,24 @@ func (w *WarehouseClient) GetWarehouseByID(ctx context.Context, warehouseID uint
 
 // GetWarehouseProductStock implements [WarehouseClientInterface].
 func (w *WarehouseClient) GetWarehouseProductStock(ctx context.Context, warehouseID uint, productID uint) (*WarehouseProductStockResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/warehouse-products/%d/detail/%d", w.UrlWarehouseService, warehouseID, productID)
+	url := fmt.Sprintf("%s/api/v1/warehouse-products/%d/detail/%d", w.UrlApiGateway, warehouseID, productID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[WarehouseClient] GetWarehouseProductStock - 1: %v", err)
 		return nil, err
 	}
+
+	token, err := w.generateInternalToken()
+	if err != nil {
+		log.Errorf("[WarehouseClient] GetWarehouseProductStock - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
@@ -96,7 +124,6 @@ func (w *WarehouseClient) GetWarehouseProductStock(ctx context.Context, warehous
 		log.Errorf("[WarehouseClient] GetWarehouseProductStock - 6: %v", err)
 		return nil, err
 	}
-	fmt.Println("lalal")
 
 	return &warehouseProductStockResponse.Data, nil
 }
@@ -133,6 +160,7 @@ func NewWarehouseClient(cfg configs.Config) WarehouseClientInterface {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		UrlWarehouseService: cfg.App.UrlWarehouseService,
+		UrlApiGateway: cfg.App.UrlApiGateway,
+		config:        cfg,
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"micro-warehouse/warehouse-service/configs"
+	"micro-warehouse/merchant-service/configs"
 )
 
 type JWTClaims struct {

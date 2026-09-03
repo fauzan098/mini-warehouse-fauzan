@@ -140,7 +140,7 @@ func loadConfig() Config {
 			},
 			"transaction": {
 				Name: "transaction-service",
-				URL:  getEnv("TRANSACTION_SERVICE_URL", "http://transaction-service:8085"),
+				URL:  getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8085"),
 			},
 			"midtrans": {
 				Name: "midtrans-service",

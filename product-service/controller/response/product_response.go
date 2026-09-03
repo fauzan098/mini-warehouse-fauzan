@@ -15,6 +15,6 @@ type ProductResponse struct {
 }
 
 type GetAllProductResponse struct {
-	Products   []ProductResponse             `json:"categories"`
+	Products   []ProductResponse             `json:"products"`
 	Pagination pagination.PaginationResponse `json:"pagination"`
 }

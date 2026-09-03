@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"micro-warehouse/transaction-service/configs"
+	"micro-warehouse/transaction-service/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -19,19 +20,36 @@ type UserClientInterface interface {
 }
 
 type UserClient struct {
-	urlUserService string
-	httpClient     *http.Client
+	UrlApiGateway string
+	httpClient    *http.Client
+	config        configs.Config
+}
+
+func (u *UserClient) generateInternalToken() (string, error) {
+	return jwt.GenerateInternalToken(u.config)
 }
 
 // GetUserByID implements [UserClientInterface].
 func (u *UserClient) GetUserByID(ctx context.Context, UserID uint) (*UserResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/users/%d", u.urlUserService, UserID)
+	url := fmt.Sprintf("%s/api/v1/users/%d", u.UrlApiGateway, UserID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[UserClient] GetUserByID - 1: %v", err)
 		return nil, err
 	}
+
+	token, err := u.generateInternalToken()
+
+	if err != nil {
+		log.Errorf("[UserClient] GetUserByID - 2: %v", err)
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := u.httpClient.Do(req)
 	if err != nil {
@@ -81,6 +99,7 @@ func NewUserClient(cfg configs.Config) UserClientInterface {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		urlUserService: cfg.App.UrlUserService,
+		UrlApiGateway: cfg.App.UrlApiGateway,
+		config:        cfg,
 	}
 }

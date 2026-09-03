@@ -10,13 +10,15 @@ import (
 	"time"
 
 	"micro-warehouse/product-service/configs"
+	"micro-warehouse/product-service/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2/log"
 )
 
 type MerchantClient struct {
-	urlMerchantService string
-	httpClient         *http.Client
+	UrlApiGateway string
+	httpClient    *http.Client
+	config        configs.Config
 }
 
 type MerchantProductResponse struct {
@@ -30,23 +32,39 @@ type MerchantProductServiceResponse struct {
 	Error   uint                    `json:"error,omitempty"`
 }
 
+func (mc *MerchantClient) generateInternalToken() (string, error) {
+	return jwt.GenerateInternalToken(mc.config)
+}
+
 func NewMerchantClient(cfg configs.Config) *MerchantClient {
 	return &MerchantClient{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		urlMerchantService: cfg.App.UrlMerchantService,
+		UrlApiGateway: cfg.App.UrlApiGateway,
+		config:        cfg,
 	}
 }
 
 func (mc *MerchantClient) GetProductStockAcrossMerchant(ctx context.Context, productID uint) (int, error) {
-	url := fmt.Sprintf("%s/api/v1/merchant-products/%d/total-stock", mc.urlMerchantService, productID)
+	url := fmt.Sprintf("%s/api/v1/merchant-products/%d/total-stock", mc.UrlApiGateway, productID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Errorf("[MerchantClient] GetProductStockAcrossMerchant - 1: %v", err)
 		return 0, err
 	}
+
+	token, err := mc.generateInternalToken()
+	if err != nil {
+		log.Errorf("[MerchantClient] GetProductStockAcrossMerchants - 2: %v", err)
+		return 0, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := mc.httpClient.Do(req)
 	if err != nil {
@@ -78,13 +96,24 @@ func (mc *MerchantClient) GetProductStockAcrossMerchant(ctx context.Context, pro
 }
 
 func (mc *MerchantClient) DeleteAllProductMerchantProducts(ctx context.Context, productID uint) error {
-	url := fmt.Sprintf("%s/api/v1/merchant-products/%d/total-stock", mc.urlMerchantService, productID)
+	url := fmt.Sprintf("%s/api/v1/merchant-products/%d/total-stock", mc.UrlApiGateway, productID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		log.Errorf("[MerchantClient] DeleteAllProductMerchantProducts - 1: %v", err)
 		return err
 	}
+
+	token, err := mc.generateInternalToken()
+	if err != nil {
+		log.Errorf("[MerchantClient] DeleteAllProductMerchantProducts - 2: %v", err)
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("X-Internal-Request", "true")
+	req.Header.Set("X-Gateway", "warehouse-api-gateway")
 
 	resp, err := mc.httpClient.Do(req)
 	if err != nil {

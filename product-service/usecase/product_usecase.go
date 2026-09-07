@@ -77,6 +77,6 @@ func (p *productUsecase) UpdateProduct(ctx context.Context, product *model.Produ
 	return p.productRepo.UpdateProduct(ctx, product)
 }
 
-func NewProductUsecase(productRepo repository.ProductRepositoryInterface) ProductUsecaseInterface {
-	return &productUsecase{productRepo: productRepo}
+func NewProductUsecase(productRepo repository.ProductRepositoryInterface, warehouseClient *httpclient.WarehouseClient, merchantClient *httpclient.MerchantClient) ProductUsecaseInterface {
+	return &productUsecase{productRepo: productRepo, warehouseClient: warehouseClient, merchantClient: merchantClient}
 }

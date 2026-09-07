@@ -97,7 +97,7 @@ func (wc *WarehouseClient) GetProductStockAcrossWarehouses(ctx context.Context, 
 }
 
 func (wc *WarehouseClient) DeleteAllProductWarehouseProducts(ctx context.Context, productID uint) error {
-	url := fmt.Sprintf("%s/api/v1/warehouse-products/%d/total-stock", wc.UrlApiGateway, productID)
+	url := fmt.Sprintf("%s/api/v1/warehouse-products/detail/products/%d", wc.UrlApiGateway, productID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {

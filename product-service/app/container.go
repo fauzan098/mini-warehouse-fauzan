@@ -6,6 +6,7 @@ import (
 	"micro-warehouse/product-service/controller"
 	"micro-warehouse/product-service/database"
 	"micro-warehouse/product-service/pkg/storage"
+	"micro-warehouse/product-service/httpclient"
 	"micro-warehouse/product-service/repository"
 	"micro-warehouse/product-service/usecase"
 )
@@ -28,7 +29,9 @@ func BuildContainer() *Container {
 	categoryController := controller.NewCategoryController(categoryUsecase)
 
 	productRepo := repository.NewProductRepository(db.DB)
-	productUsecase := usecase.NewProductUsecase(productRepo)
+	warehouseClient := httpclient.NewWarehouseClient(*config)
+	merchantClient := httpclient.NewMerchantClient(*config)
+	productUsecase := usecase.NewProductUsecase(productRepo, warehouseClient, merchantClient)
 	productController := controller.NewProductController(productUsecase)
 
 	supabaseStorage := storage.NewSupabaseStorage(*config)

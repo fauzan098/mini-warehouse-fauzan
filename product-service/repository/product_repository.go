@@ -41,9 +41,9 @@ func (p *productRepository) DeleteProduct(ctx context.Context, id uint) error {
 		return ctx.Err()
 	default:
 		modelProduct := model.Product{}
-		if err := p.db.WithContext(ctx).Where("id = ?", id).Preload("Products").First(&modelProduct).Error; err != nil {
+		if err := p.db.WithContext(ctx).Where("id = ?", id).First(&modelProduct).Error; err != nil {
 			log.Errorf("[productRepository] DeleteProduct - 2: %v", err)
-			return nil
+			return err
 		}
 
 		return p.db.WithContext(ctx).Delete(&modelProduct).Error

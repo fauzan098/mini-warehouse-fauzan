@@ -96,7 +96,7 @@ func (mc *MerchantClient) GetProductStockAcrossMerchant(ctx context.Context, pro
 }
 
 func (mc *MerchantClient) DeleteAllProductMerchantProducts(ctx context.Context, productID uint) error {
-	url := fmt.Sprintf("%s/api/v1/merchant-products/%d/total-stock", mc.UrlApiGateway, productID)
+	url := fmt.Sprintf("%s/api/v1/merchant-products/product/%d", mc.UrlApiGateway, productID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {

@@ -52,10 +52,8 @@ func (cpc *CachedProductClient) GetProductByID(ctx context.Context, productID ui
 		return nil, err
 	}
 
-	err = cpc.redis.Set(ctx, cacheKey, product, cpc.ttl)
-	if err != nil {
-		log.Infof("[CacheProductClient] GetProductByID - 2: %v", err)
-		return nil, err
+	if err = cpc.redis.Set(ctx, cacheKey, product, cpc.ttl); err != nil {
+		log.Errorf("[CacheProductClient] GetProductByID - 3: %v", err)
 	}
 
 	return product, nil
@@ -76,10 +74,8 @@ func (cpc *CachedProductClient) GetProductByBarcode(ctx context.Context, barcode
 		return nil, err
 	}
 
-	err = cpc.redis.Set(ctx, cacheKey, product, cpc.ttl)
-	if err != nil {
+	if err = cpc.redis.Set(ctx, cacheKey, product, cpc.ttl); err != nil {
 		log.Errorf("[CachedProductClient] GetProductByBarcode - 3: %v", err)
-		return nil, err
 	}
 
 	return product, nil

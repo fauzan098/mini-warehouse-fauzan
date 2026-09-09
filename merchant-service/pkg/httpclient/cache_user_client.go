@@ -42,10 +42,8 @@ func (cuc *CachedUserClient) GetUserByID(ctx context.Context, userID uint) (*Use
 		return nil, err
 	}
 
-	err = cuc.redis.Set(ctx, cacheKey, user, cuc.ttl)
-	if err != nil {
+	if err = cuc.redis.Set(ctx, cacheKey, user, cuc.ttl); err != nil {
 		log.Errorf("[CachedUserClient] GetUserByID - 3: %v", err)
-		return nil, err
 	}
 
 	return user, nil

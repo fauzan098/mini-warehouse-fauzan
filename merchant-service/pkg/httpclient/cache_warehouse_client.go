@@ -43,10 +43,8 @@ func (cwc *CachedWarehouseClient) GetWarehouseByID(ctx context.Context, warehous
 		return nil, err
 	}
 
-	err = cwc.redis.Set(ctx, cacheKey, warehouse, cwc.ttl)
-	if err != nil {
+	if err = cwc.redis.Set(ctx, cacheKey, warehouse, cwc.ttl); err != nil {
 		log.Errorf("[CachedWarehouseClient] GetWarehouseByID - 3: %v", err)
-		return nil, err
 	}
 
 	return warehouse, nil
@@ -67,10 +65,8 @@ func (cwc *CachedWarehouseClient) GetWarehouseProductStock(ctx context.Context, 
 		return nil, err
 	}
 
-	err = cwc.redis.Set(ctx, cacheKey, warehouseProductStock, cwc.ttl)
-	if err != nil {
+	if err = cwc.redis.Set(ctx, cacheKey, warehouseProductStock, cwc.ttl); err != nil {
 		log.Errorf("[CachedWarehouseClient] GetWarehouseProductStock - 3: %v", err)
-		return nil, err
 	}
 
 	return warehouseProductStock, nil

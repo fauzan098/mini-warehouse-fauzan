@@ -138,7 +138,7 @@ func (w *warehouseProductRepository) GetWarehouseProductByProductID(ctx context.
 	default:
 		var warehouseProduct []model.WarehouseProduct
 		if err := w.db.WithContext(ctx).
-			Where("id = ?", ProductID).
+			Where("product_id = ?", ProductID).
 			Preload("Warehouse").
 			Find(&warehouseProduct).Error; err != nil {
 			log.Errorf("[WarehouseProductRepository] GetWarehouseProductByProductID - 1: %v", ctx.Err())

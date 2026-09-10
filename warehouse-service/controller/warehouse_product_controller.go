@@ -147,7 +147,7 @@ func (w *warehouseProductController) GetDetailWarehouse(c *fiber.Ctx) error {
 		if product, exists := productMap[wp.ProductID]; exists {
 			warehouseProduct.ProductName = product.Name
 			warehouseProduct.ProductAbout = product.About
-			warehouseProduct.ProductPhoto = product.Thumbanail
+			warehouseProduct.ProductPhoto = product.Thumbnail
 			warehouseProduct.ProductPrice = int(product.Price)
 			warehouseProduct.ProductCategory = product.Category.Name
 			warehouseProduct.ProductCategoryPhoto = product.Category.Photo
@@ -188,7 +188,7 @@ func (w *warehouseProductController) GetDetailWarehouseProductByID(c *fiber.Ctx)
 		ProductBarcode:   product.Barcode,
 		ProductPrice:     int(product.Price),
 		ProductAbout:     product.About,
-		ProductThumbnail: product.Thumbanail,
+		ProductThumbnail: product.Thumbnail,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -280,7 +280,7 @@ func (w *warehouseProductController) GetWarehouseProductByWarehouseIDAndProductI
 		ProductID:            warehouseProduct.ProductID,
 		ProductName:          product.Name,
 		ProductAbout:         product.About,
-		ProductPhoto:         product.Thumbanail,
+		ProductPhoto:         product.Thumbnail,
 		ProductPrice:         int(product.Price),
 		ProductCategory:      product.Category.Name,
 		ProductCategoryPhoto: product.Category.Photo,

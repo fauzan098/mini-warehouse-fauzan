@@ -9,7 +9,7 @@ type ProductResponse struct {
 	Price      int              `json:"price"`
 	About      string           `json:"about"`
 	CategoryID uint             `json:"category_id"`
-	Thumbnail  string           `json:"thumnail"`
+	Thumbnail  string           `json:"thumbnail"`
 	IsPopular  bool             `json:"is_popular"`
 	Category   CategoryResponse `json:"category"`
 }

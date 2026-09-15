@@ -14,9 +14,10 @@ import (
 )
 
 type RabbitMQConsumer struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	repo    repository.WarehouseProductRepositoryInterface
+	url  string
+	conn *amqp.Connection
+	ch   *amqp.Channel
+	repo repository.WarehouseProductRepositoryInterface
 }
 
 type StockReductionEvent struct {
@@ -29,106 +30,162 @@ type StockReductionEvent struct {
 
 const (
 	ExchangeName = "warehouse_events"
-	QueueName = "stock_reduce_queue"
-	RoutingKey = "stock_reduction"
+	QueueName    = "stock_reduce_queue"
+	RoutingKey   = "stock_reduction"
 )
 
-func NewRabbitMQConsumer(rabbitMQURL string, repo repository.WarehouseProductRepositoryInterface) (*RabbitMQConsumer, error) {
-	conn, err := amqp.Dial(rabbitMQURL)
+func NewRabbitMQConsumer(rabbitMQURL string, repo repository.WarehouseProductRepositoryInterface) *RabbitMQConsumer {
+	return &RabbitMQConsumer{
+		url:  rabbitMQURL,
+		repo: repo,
+	}
+}
+
+func (rc *RabbitMQConsumer) connect() error {
+	conn, err := amqp.Dial(rc.url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect RabbitMQ: %v", err)
+		return fmt.Errorf("failed to connect RabbitMQ: %v", err)
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open channel: %v", err)
+		conn.Close()
+		return fmt.Errorf("failed to open channel: %v", err)
 	}
 
-	// Declare exchange
 	err = ch.ExchangeDeclare(
-		ExchangeName, // name
-		"topic",      // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to declare exchange: %w", err)
-	}
-
-	// Declare queue
-	q, err := ch.QueueDeclare(
-		QueueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to declare queue: %w", err)
-	}
-
-	// Bind queue to exchange
-	err = ch.QueueBind(
-		q.Name,       // queue name
-		RoutingKey,   // routing key
-		ExchangeName, // exchange
-		false,
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to bind queue: %w", err)
-	}
-
-	return &RabbitMQConsumer{
-		conn:    conn,
-		channel: ch,
-		repo:    repo,
-	}, nil
-}
-
-func (rc *RabbitMQConsumer) StartConsuming(ctx context.Context) error {
-	msgs, err := rc.channel.Consume(
-		QueueName,
-		"",
+		ExchangeName,
+		"topic",
 		true,
 		false,
 		false,
 		false,
 		nil,
 	)
-
 	if err != nil {
-		return fmt.Errorf("failed to consume message: %v", err)
+		ch.Close()
+		conn.Close()
+		return fmt.Errorf("failed to declare exchange: %w", err)
 	}
 
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Infof("[RabbitMQConsumer] Stopping consumer due to context cancellation")
-				return
-			case msg := <-msgs:
-				rc.handleMessage(ctx, msg)
-			}
-		}
-	}()
+	q, err := ch.QueueDeclare(
+		QueueName,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		ch.Close()
+		conn.Close()
+		return fmt.Errorf("failed to declare queue: %w", err)
+	}
 
+	err = ch.QueueBind(
+		q.Name,
+		RoutingKey,
+		ExchangeName,
+		false,
+		nil,
+	)
+	if err != nil {
+		ch.Close()
+		conn.Close()
+		return fmt.Errorf("failed to bind queue: %w", err)
+	}
+
+	rc.conn = conn
+	rc.ch = ch
 	return nil
 }
 
+func (rc *RabbitMQConsumer) close() {
+	if rc.ch != nil {
+		rc.ch.Close()
+		rc.ch = nil
+	}
+	if rc.conn != nil {
+		rc.conn.Close()
+		rc.conn = nil
+	}
+}
+
+func (rc *RabbitMQConsumer) StartConsuming(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("[RabbitMQConsumer] Stopping consumer due to context cancellation")
+			rc.close()
+			return
+		default:
+		}
+
+		if err := rc.connect(); err != nil {
+			log.Errorf("[RabbitMQConsumer] Connection failed: %v, retrying in 5s...", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		log.Infof("[RabbitMQConsumer] Connected to RabbitMQ, start consuming")
+
+		msgs, err := rc.ch.Consume(
+			QueueName,
+			"",
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Errorf("[RabbitMQConsumer] Failed to start consuming: %v, reconnecting in 5s...", err)
+			rc.close()
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		consumed := rc.consumeLoop(ctx, msgs)
+		rc.close()
+
+		if !consumed {
+			log.Warnf("[RabbitMQConsumer] Channel closed, reconnecting in 5s...")
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
+func (rc *RabbitMQConsumer) consumeLoop(ctx context.Context, msgs <-chan amqp.Delivery) bool {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("[RabbitMQConsumer] Stopping consumer due to context cancellation")
+			return true
+		case msg, ok := <-msgs:
+			if !ok {
+				return false
+			}
+			rc.handleMessage(ctx, msg)
+		}
+	}
+}
+
 func (rc *RabbitMQConsumer) handleMessage(ctx context.Context, msg amqp.Delivery) {
+	if len(msg.Body) == 0 {
+		msg.Nack(false, false)
+		return
+	}
+
 	var event StockReductionEvent
 	if err := json.Unmarshal(msg.Body, &event); err != nil {
-		log.Errorf("[RabbitMQConsumer] handleMessage - 1: %v", err)
+		log.Errorf("[RabbitMQConsumer] handleMessage - invalid JSON: %v", err)
+		msg.Nack(false, false)
 		return
 	}
 
 	if err := rc.processStockReduction(ctx, event); err != nil {
-		log.Errorf("[RabbitMQConsumer] handleMessage - 2: %v", err)
+		log.Errorf("[RabbitMQConsumer] handleMessage - process failed: %v", err)
+		msg.Nack(false, false)
 		return
 	}
 
@@ -151,6 +208,7 @@ func (rc *RabbitMQConsumer) processStockReduction(ctx context.Context, event Sto
 
 	if err := rc.repo.UpdateWarehouseProduct(ctx, warehouseProduct); err != nil {
 		log.Errorf("[RabbitMQConsumer] processStockReduction - 2: %v", err)
+		return err
 	}
 
 	return nil

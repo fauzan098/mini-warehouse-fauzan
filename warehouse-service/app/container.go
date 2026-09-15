@@ -41,10 +41,7 @@ func BuildContainer() *Container {
 	warehouseProductController := controller.NewWarehouseProductController(warehouseProductUsecase)
 
 
-	rabbitMQConsumer, err := rabbitmq.NewRabbitMQConsumer(config.RabbitMQ.URL(), warehouseProductRepo)
-	if err != nil {
-		log.Fatalf("Failed to create rabbitmq consumer: %v", err)
-	}
+	rabbitMQConsumer := rabbitmq.NewRabbitMQConsumer(config.RabbitMQ.URL(), warehouseProductRepo)
 
 	supabaseStorage := storage.NewSupabaseStorage(*config)
 	fileUploadHelper := storage.NewFileUploadHelper(supabaseStorage, *config)

@@ -15,16 +15,16 @@ type RabbitMQService struct {
 }
 
 type StockReductionEvent struct {
-	WarhouseID uint      `json:"warhouse_id"`
-	ProductID  uint      `json:"product_id"`
-	Stock      int       `json:"stock"`
-	MerchantID uint      `json:"merchant_id"`
-	Timestamp  time.Time `json:"timestamp"`
+	WarehouseID uint      `json:"warehouse_id"`
+	ProductID   uint      `json:"product_id"`
+	Stock       int       `json:"stock"`
+	MerchantID  uint      `json:"merchant_id"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 const (
 	ExhangeName = "warehouse_events"
-	QueueName   = "stock_reduction_queue"
+	QueueName   = "stock_reduce_queue"
 	RoutingKey  = "stock_reduction"
 )
 
@@ -50,7 +50,6 @@ func NewRabbitMQService(rabbitMQUrl string) (*RabbitMQService, error) {
 		false,
 		nil,
 	)
-
 	if err != nil {
 		log.Errorf("[RabbitMQService] NewRabbitMQService - 3: %v", err)
 		return nil, err
@@ -64,7 +63,6 @@ func NewRabbitMQService(rabbitMQUrl string) (*RabbitMQService, error) {
 		false,
 		nil,
 	)
-
 	if err != nil {
 		log.Errorf("[RabbitMQService] NewRabbitMQService - 4: %v", err)
 		return nil, err
@@ -77,7 +75,6 @@ func NewRabbitMQService(rabbitMQUrl string) (*RabbitMQService, error) {
 		false,
 		nil,
 	)
-
 	if err != nil {
 		log.Errorf("[RabbitMQService] NewRabbitMQService - 5: %v", err)
 		return nil, err
@@ -106,7 +103,6 @@ func (r *RabbitMQService) PublishStockReductionEvent(ctx context.Context, event 
 			Body:        body,
 		},
 	)
-
 	if err != nil {
 		log.Errorf("[RabbitMQService] PublishStockReductionEvent - 2: %v", err)
 		return err

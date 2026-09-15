@@ -38,13 +38,9 @@ func RunServer() {
 	container := BuildContainer()
 	SetupRoutes(app, container)
 
+	rabbitCtx, rabbitCancel := context.WithCancel(context.Background())
 	if container.RabbitMQConsumer != nil {
-		ctx := context.Background()
-		if err := container.RabbitMQConsumer.StartConsuming(ctx); err != nil {
-			log.Errorf("Failed to start RabbitMQ consumer: %v", err)
-		} else {
-			log.Infof("RabbitMQ consumer started successfully")
-		}
+		go container.RabbitMQConsumer.StartConsuming(rabbitCtx)
 	}
 	
 	port := cfg.App.AppPort
@@ -67,6 +63,8 @@ func RunServer() {
 
 	<-quit
 	zerolog.Printf("Shutting down server...")
+
+	rabbitCancel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

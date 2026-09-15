@@ -15,7 +15,7 @@ type RabbitMQService struct {
 }
 
 type StockReductionEvent struct {
-	WarehouseID uint      `json:"warhouse_id"`
+	WarehouseID uint      `json:"warehouse_id"`
 	ProductID  uint      `json:"product_id"`
 	Stock      int       `json:"stock"`
 	MerchantID uint      `json:"merchant_id"`
@@ -24,7 +24,7 @@ type StockReductionEvent struct {
 
 const (
 	ExhangeName = "warehouse_events"
-	QueueName   = "stock_reduction_queue"
+	QueueName   = "stock_reduce_queue"
 	RoutingKey  = "stock_reduction"
 )
 
